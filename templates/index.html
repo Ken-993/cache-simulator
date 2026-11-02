@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cache Replacement Simulator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head>
+<body>
+  <header>
+    <h1>Cache Replacement Simulator</h1>
+    <p class="muted">LRU vs FIFO vs LFU vs Optimal (Bélády)</p>
+    <nav>
+      <button class="tab active" data-tab="simulate">Step-by-step</button>
+      <button class="tab" data-tab="compare">Compare policies</button>
+      <button class="tab" data-tab="about">How it works</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- STEP-BY-STEP -->
+    <section id="simulate" class="panel active">
+      <div class="controls">
+        <label>Capacity
+          <input id="capacity" type="number" min="1" max="50" value="3">
+        </label>
+        <label class="grow">Access sequence (space or comma separated)
+          <input id="sequence" value="1 2 3 4 1 2 5 1 2 3 4 5">
+        </label>
+        <button id="runBtn" class="primary">Run</button>
+      </div>
+
+      <div class="controls" id="playback" hidden>
+        <button id="prevBtn">◀ Prev</button>
+        <button id="playBtn">▶ Play</button>
+        <button id="nextBtn">Next ▶</button>
+        <span id="stepLabel" class="muted"></span>
+      </div>
+
+      <p id="simError" class="error"></p>
+      <div id="sequenceStrip" class="strip"></div>
+      <div id="policyGrid" class="grid"></div>
+      <table id="summary" hidden></table>
+    </section>
+
+    <!-- COMPARE -->
+    <section id="compare" class="panel">
+      <div class="controls">
+        <label>Workload
+          <select id="workload">
+            {% for w in workloads %}<option>{{ w }}</option>{% endfor %}
+          </select>
+        </label>
+        <button id="compareBtn" class="primary">Run comparison</button>
+      </div>
+      <p id="compareInfo" class="muted">5,000 accesses × 6 capacities × 4 policies</p>
+      <div class="chart-box"><canvas id="chart"></canvas></div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" class="panel prose">
+      <h2>LRU: Least Recently Used</h2>
+      <p>Uses a <b>hash map</b> (key → node) and a <b>doubly linked list</b>
+        (most recent at the front). On a hit, the node is moved to the front in O(1).
+        On a miss with a full cache, the node at the back is evicted in O(1).
+        Neither structure alone gives O(1) for both lookup and reordering.</p>
+
+      <h2>FIFO: First In, First Out</h2>
+      <p>A queue: evicts whatever entered first, ignoring how often or how recently
+        it was used. O(1). Can suffer <b>Bélády's anomaly</b>: a bigger cache gives
+        more misses. Try <code>1 2 3 4 1 2 5 1 2 3 4 5</code> with capacity 3, then 4.</p>
+
+      <h2>LFU: Least Frequently Used</h2>
+      <p>A map of frequency → doubly linked list plus a <code>min_freq</code>
+        pointer gives O(1) eviction of the least-used key (ties broken by LRU).</p>
+
+      <h2>Optimal (Bélády's algorithm)</h2>
+      <p>Evicts the key whose next use is farthest in the future. It needs future
+        knowledge, so it can't be used in practice, but it is the theoretical best
+        and serves as the benchmark.</p>
+
+      <h2>Complexity</h2>
+      <table>
+        <tr><th>Policy</th><th>Per access</th><th>Space</th></tr>
+        <tr><td>LRU</td><td>O(1)</td><td>O(capacity)</td></tr>
+        <tr><td>FIFO</td><td>O(1)</td><td>O(capacity)</td></tr>
+        <tr><td>LFU</td><td>O(1)</td><td>O(capacity)</td></tr>
+        <tr><td>Optimal</td><td>O(capacity) on eviction</td><td>O(n)</td></tr>
+      </table>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

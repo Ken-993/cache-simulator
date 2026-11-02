@@ -1,0 +1,73 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: #0f1115;
+  color: #e6e6e6;
+}
+header { padding: 24px 32px 0; border-bottom: 1px solid #262a33; }
+h1 { margin: 0 0 4px; }
+main { padding: 24px 32px; max-width: 1200px; margin: 0 auto; }
+.muted { color: #9aa0a6; }
+.small { font-size: 0.85rem; margin: 6px 0; }
+.error { color: #ff6b6b; }
+
+nav { display: flex; gap: 4px; margin-top: 16px; }
+.tab {
+  background: none; border: none; color: #9aa0a6;
+  padding: 10px 16px; cursor: pointer; border-bottom: 2px solid transparent;
+  font-size: 0.95rem;
+}
+.tab.active { color: #fff; border-bottom-color: #4f8cff; }
+
+.panel { display: none; }
+.panel.active { display: block; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 16px; }
+label { display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; color: #9aa0a6; }
+.grow { flex: 1; min-width: 240px; }
+input, select {
+  background: #181b22; border: 1px solid #2d323d; color: #fff;
+  padding: 9px 12px; border-radius: 8px; font-size: 0.95rem;
+}
+button {
+  background: #232733; color: #fff; border: 1px solid #2d323d;
+  padding: 9px 16px; border-radius: 8px; cursor: pointer; font-size: 0.95rem;
+}
+button:hover { background: #2c3140; }
+button:disabled { opacity: 0.5; cursor: wait; }
+button.primary { background: #4f8cff; border-color: #4f8cff; }
+button.primary:hover { background: #3b78ec; }
+
+.strip { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+.chip {
+  padding: 4px 10px; border-radius: 6px; background: #181b22;
+  border: 1px solid #2d323d; font-family: monospace;
+}
+.chip.done { opacity: 0.45; }
+.chip.current { background: #4f8cff; border-color: #4f8cff; color: #fff; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.card { background: #161920; border: 1px solid #262a33; border-radius: 12px; padding: 16px; }
+.card-head { display: flex; justify-content: space-between; align-items: center; }
+.card-head h3 { margin: 0; }
+.badge { padding: 3px 10px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
+.badge.hit { background: #1f4d33; color: #4ade80; }
+.badge.miss { background: #4d1f1f; color: #ff7b7b; }
+
+.slots { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+.slot {
+  min-width: 44px; height: 44px; padding: 0 6px; border-radius: 8px;
+  border: 1px dashed #3a3f4b; display: flex; align-items: center;
+  justify-content: center; font-family: monospace;
+}
+.slot.filled { border: 1px solid #4f8cff; background: #1b2436; }
+
+table { border-collapse: collapse; margin-top: 24px; min-width: 360px; }
+th, td { padding: 8px 14px; border-bottom: 1px solid #262a33; text-align: left; }
+th { color: #9aa0a6; font-weight: 500; }
+
+.chart-box { height: 460px; background: #161920; border: 1px solid #262a33; border-radius: 12px; padding: 16px; }
+.prose { max-width: 760px; line-height: 1.6; }
+.prose h2 { margin-top: 28px; }
+code { background: #232733; padding: 2px 6px; border-radius: 4px; }
