@@ -170,13 +170,13 @@
         <div class="card">
           <h2>The four policies</h2>
           <dl class="policy-list">
-            <dt style="--c:#E3B341">LRU</dt>
+            <dt style="--c:#E6D8C3">LRU</dt>
             <dd>Evicts whatever was used longest ago. Built from a hash map and a doubly linked list, so every access is O(1).</dd>
-            <dt style="--c:#E07A4F">FIFO</dt>
+            <dt style="--c:#D9A57A">FIFO</dt>
             <dd>Evicts whatever arrived first, even if it is still in use. A queue plus a set. It can get worse with a bigger cache, which is Bélády's anomaly.</dd>
-            <dt style="--c:#5FC9D6">LFU</dt>
+            <dt style="--c:#8FB3D9">LFU</dt>
             <dd>Evicts whatever has been used the fewest times, breaking ties by recency. A map from use count to linked list gives O(1).</dd>
-            <dt style="--c:#CFCBBE">Optimal</dt>
+            <dt style="--c:#9AA3B5">Optimal</dt>
             <dd>Evicts whatever is needed furthest in the future. No real system can know that, so it serves as the best possible score to compare against.</dd>
           </dl>
         </div>

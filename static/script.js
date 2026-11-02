@@ -1,10 +1,10 @@
 /* ---------- Constants ---------- */
 const POLICIES = ["LRU", "FIFO", "LFU", "Optimal"];
 const META = {
-  LRU: { color: "#E3B341", full: "Least recently used", order: "Most recent on the left" },
-  FIFO: { color: "#E07A4F", full: "First in, first out", order: "Newest on the left" },
-  LFU: { color: "#5FC9D6", full: "Least frequently used", order: "Badge shows use count" },
-  Optimal: { color: "#CFCBBE", full: "Bélády's optimal", order: "Knows the future" },
+  LRU: { color: "#E6D8C3", full: "Least recently used", order: "Most recent on the left" },
+  FIFO: { color: "#D9A57A", full: "First in, first out", order: "Newest on the left" },
+  LFU: { color: "#8FB3D9", full: "Least frequently used", order: "Badge shows use count" },
+  Optimal: { color: "#9AA3B5", full: "Bélády's optimal", order: "Knows the future" },
 };
 const WORKLOAD_INFO = {
   "Uniform Random": "Every key is equally likely. There is no pattern to exploit.",
@@ -346,9 +346,9 @@ let chart = null;
 document.querySelectorAll("[data-desc]").forEach((el) => (el.textContent = WORKLOAD_INFO[el.dataset.desc] || ""));
 
 if (window.Chart) {
-  Chart.defaults.color = "#A9B8AC";
+  Chart.defaults.color = "#B5AFA5";
   Chart.defaults.font.family = '"IBM Plex Sans", system-ui, sans-serif';
-  Chart.defaults.borderColor = "rgba(44, 122, 92, 0.35)";
+  Chart.defaults.borderColor = "rgba(75, 90, 124, 0.45)";
 }
 
 document.querySelectorAll('input[name="workload"]').forEach((r) =>
