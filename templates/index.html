@@ -3,91 +3,195 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cache Replacement Simulator</title>
+  <title>Cache replacement simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 </head>
 <body>
-  <header>
-    <h1>Cache Replacement Simulator</h1>
-    <p class="muted">LRU vs FIFO vs LFU vs Optimal (Bélády)</p>
-    <nav>
-      <button class="tab active" data-tab="simulate">Step-by-step</button>
-      <button class="tab" data-tab="compare">Compare policies</button>
-      <button class="tab" data-tab="about">How it works</button>
-    </nav>
+  <header class="masthead">
+    <div class="masthead-inner">
+      <div class="brand">
+        <span class="chip-icon" aria-hidden="true"></span>
+        <div>
+          <h1>Cache replacement simulator</h1>
+          <p class="tagline">Watch LRU, FIFO, LFU and Optimal decide what to throw out when memory is full.</p>
+        </div>
+      </div>
+      <nav class="tabs" role="tablist">
+        <button class="tab active" role="tab" aria-selected="true" data-tab="simulate">Simulate</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="compare">Compare</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="learn">How LRU works</button>
+      </nav>
+    </div>
   </header>
 
   <main>
-    <!-- STEP-BY-STEP -->
+    <!-- ================= SIMULATE ================= -->
     <section id="simulate" class="panel active">
-      <div class="controls">
-        <label>Capacity
-          <input id="capacity" type="number" min="1" max="50" value="3">
-        </label>
-        <label class="grow">Access sequence (space or comma separated)
-          <input id="sequence" value="1 2 3 4 1 2 5 1 2 3 4 5">
-        </label>
-        <button id="runBtn" class="primary">Run</button>
-      </div>
-
-      <div class="controls" id="playback" hidden>
-        <button id="prevBtn">◀ Prev</button>
-        <button id="playBtn">▶ Play</button>
-        <button id="nextBtn">Next ▶</button>
-        <span id="stepLabel" class="muted"></span>
-      </div>
-
-      <p id="simError" class="error"></p>
-      <div id="sequenceStrip" class="strip"></div>
-      <div id="policyGrid" class="grid"></div>
-      <table id="summary" hidden></table>
-    </section>
-
-    <!-- COMPARE -->
-    <section id="compare" class="panel">
-      <div class="controls">
-        <label>Workload
-          <select id="workload">
-            {% for w in workloads %}<option>{{ w }}</option>{% endfor %}
+      <form id="simForm" class="console">
+        <div class="field">
+          <label for="capacity">Cache size</label>
+          <div class="stepper">
+            <button type="button" data-step="-1" data-target="capacity" aria-label="Decrease cache size">−</button>
+            <input id="capacity" type="number" min="1" max="50" value="3">
+            <button type="button" data-step="1" data-target="capacity" aria-label="Increase cache size">+</button>
+          </div>
+        </div>
+        <div class="field grow">
+          <label for="sequence">Access sequence</label>
+          <input id="sequence" value="1 2 3 4 1 2 5 1 2 3 4 5" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="field">
+          <label for="preset">Try a scenario</label>
+          <select id="preset">
+            <option value="">Choose one</option>
+            <option value="belady">Bélády's anomaly (FIFO)</option>
+            <option value="loop">LRU's worst case: a loop</option>
+            <option value="locality">Recent keys come back</option>
+            <option value="popular">One key is very popular</option>
           </select>
-        </label>
-        <button id="compareBtn" class="primary">Run comparison</button>
+        </div>
+        <div class="actions">
+          <button type="button" id="randomBtn" class="ghost">Random</button>
+          <button type="submit" class="primary">Run simulation</button>
+        </div>
+      </form>
+      <p id="simError" class="error" role="alert"></p>
+
+      <div id="simEmpty" class="empty">Pick a scenario or type a sequence, then run the simulation.</div>
+
+      <div id="simView" hidden>
+        <div class="transport">
+          <div class="buttons">
+            <button type="button" id="firstBtn" aria-label="First request">«</button>
+            <button type="button" id="prevBtn" aria-label="Previous request">‹</button>
+            <button type="button" id="playBtn" class="play" aria-label="Play">▶</button>
+            <button type="button" id="nextBtn" aria-label="Next request">›</button>
+            <button type="button" id="lastBtn" aria-label="Last request">»</button>
+          </div>
+          <div class="speed">
+            <label for="speed">Speed</label>
+            <input id="speed" type="range" min="1" max="5" value="3">
+          </div>
+          <p id="stepLabel" class="step-label" aria-live="polite"></p>
+          <p class="keys-hint">Space to play, arrow keys to step</p>
+        </div>
+
+        <div id="banks" class="banks"></div>
+
+        <section class="card trace-panel">
+          <h2>Hit and miss trace</h2>
+          <p class="hint">The line is high on a hit and low on a miss. Click any column to jump there.</p>
+          <div class="analyzer-scroll"><div id="analyzer" class="analyzer"></div></div>
+        </section>
+
+        <section id="results" class="card results" hidden>
+          <h2>Final score</h2>
+          <div id="resultBars"></div>
+        </section>
       </div>
-      <p id="compareInfo" class="muted">5,000 accesses × 6 capacities × 4 policies</p>
-      <div class="chart-box"><canvas id="chart"></canvas></div>
     </section>
 
-    <!-- ABOUT -->
-    <section id="about" class="panel prose">
-      <h2>LRU: Least Recently Used</h2>
-      <p>Uses a <b>hash map</b> (key → node) and a <b>doubly linked list</b>
-        (most recent at the front). On a hit, the node is moved to the front in O(1).
-        On a miss with a full cache, the node at the back is evicted in O(1).
-        Neither structure alone gives O(1) for both lookup and reordering.</p>
+    <!-- ================= COMPARE ================= -->
+    <section id="compare" class="panel">
+      <div class="compare-layout">
+        <aside class="card workloads">
+          <h2>Workload</h2>
+          <p class="hint">5,000 requests, replayed at six cache sizes.</p>
+          <div role="radiogroup" aria-label="Workload">
+            {% for w in workloads %}
+            <label class="workload">
+              <input type="radio" name="workload" value="{{ w }}" {% if loop.first %}checked{% endif %}>
+              <span class="w-name">{{ w }}</span>
+              <span class="w-desc" data-desc="{{ w }}"></span>
+            </label>
+            {% endfor %}
+          </div>
+          <button type="button" id="compareBtn" class="primary wide">Run comparison</button>
+        </aside>
+        <div class="card chart-area">
+          <div class="chart-box">
+            <canvas id="chart"></canvas>
+            <div id="chartEmpty" class="empty inset">Choose a workload to see the results.</div>
+          </div>
+          <ul id="insights" class="insights"></ul>
+        </div>
+      </div>
+    </section>
 
-      <h2>FIFO: First In, First Out</h2>
-      <p>A queue: evicts whatever entered first, ignoring how often or how recently
-        it was used. O(1). Can suffer <b>Bélády's anomaly</b>: a bigger cache gives
-        more misses. Try <code>1 2 3 4 1 2 5 1 2 3 4 5</code> with capacity 3, then 4.</p>
+    <!-- ================= LEARN ================= -->
+    <section id="learn" class="panel">
+      <p class="lab-intro">Every key you access here runs through the real LRU code on the server. You see the two structures inside it: a hash map to find keys instantly and a doubly linked list to keep them in order of use.</p>
 
-      <h2>LFU: Least Frequently Used</h2>
-      <p>A map of frequency → doubly linked list plus a <code>min_freq</code>
-        pointer gives O(1) eviction of the least-used key (ties broken by LRU).</p>
+      <div class="card lab">
+        <div class="lab-controls">
+          <div class="field">
+            <label for="labCap">Cache size</label>
+            <div class="stepper">
+              <button type="button" data-step="-1" data-target="labCap" aria-label="Decrease lab cache size">−</button>
+              <input id="labCap" type="number" min="1" max="8" value="4">
+              <button type="button" data-step="1" data-target="labCap" aria-label="Increase lab cache size">+</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="labKey">Access a key</label>
+            <form id="labForm" class="inline">
+              <input id="labKey" maxlength="6" placeholder="e.g. 7" autocomplete="off">
+              <button type="submit" class="primary">Access</button>
+            </form>
+          </div>
+          <div class="field">
+            <span class="label">Quick keys</span>
+            <div id="quickKeys" class="quick-keys"></div>
+          </div>
+          <button type="button" id="labReset" class="ghost">Reset</button>
+        </div>
+        <p id="labError" class="error" role="alert"></p>
 
-      <h2>Optimal (Bélády's algorithm)</h2>
-      <p>Evicts the key whose next use is farthest in the future. It needs future
-        knowledge, so it can't be used in practice, but it is the theoretical best
-        and serves as the benchmark.</p>
+        <div class="lab-board">
+          <div class="lab-map">
+            <h3>Hash map</h3>
+            <p class="hint">Finds any key's node in O(1). Has no order.</p>
+            <table id="labMap"></table>
+          </div>
+          <div class="lab-list">
+            <h3>Doubly linked list</h3>
+            <p class="hint">Front is most recent. The node at the back is evicted next.</p>
+            <div id="labList" class="dll"></div>
+          </div>
+        </div>
+        <ul id="labLog" class="log"></ul>
+      </div>
 
-      <h2>Complexity</h2>
-      <table>
-        <tr><th>Policy</th><th>Per access</th><th>Space</th></tr>
-        <tr><td>LRU</td><td>O(1)</td><td>O(capacity)</td></tr>
-        <tr><td>FIFO</td><td>O(1)</td><td>O(capacity)</td></tr>
-        <tr><td>LFU</td><td>O(1)</td><td>O(capacity)</td></tr>
-        <tr><td>Optimal</td><td>O(capacity) on eviction</td><td>O(n)</td></tr>
-      </table>
+      <div class="notes">
+        <div class="card">
+          <h2>The four policies</h2>
+          <dl class="policy-list">
+            <dt style="--c:#E3B341">LRU</dt>
+            <dd>Evicts whatever was used longest ago. Built from a hash map and a doubly linked list, so every access is O(1).</dd>
+            <dt style="--c:#E07A4F">FIFO</dt>
+            <dd>Evicts whatever arrived first, even if it is still in use. A queue plus a set. It can get worse with a bigger cache, which is Bélády's anomaly.</dd>
+            <dt style="--c:#5FC9D6">LFU</dt>
+            <dd>Evicts whatever has been used the fewest times, breaking ties by recency. A map from use count to linked list gives O(1).</dd>
+            <dt style="--c:#CFCBBE">Optimal</dt>
+            <dd>Evicts whatever is needed furthest in the future. No real system can know that, so it serves as the best possible score to compare against.</dd>
+          </dl>
+        </div>
+        <div class="card">
+          <h2>Cost per request</h2>
+          <table class="complexity">
+            <tr><th>Policy</th><th>Time</th><th>Space</th></tr>
+            <tr><td>LRU</td><td>O(1)</td><td>O(capacity)</td></tr>
+            <tr><td>FIFO</td><td>O(1)</td><td>O(capacity)</td></tr>
+            <tr><td>LFU</td><td>O(1)</td><td>O(capacity)</td></tr>
+            <tr><td>Optimal</td><td>O(capacity) per eviction</td><td>O(n)</td></tr>
+          </table>
+          <p class="hint table-note">n is the length of the request sequence. Optimal precomputes when each key is next needed in one backward pass.</p>
+        </div>
+      </div>
     </section>
   </main>
 
